@@ -1,15 +1,16 @@
 from config import get_openai_client
-from schema.chat import ChatResponse, ChatRequest
+from models.chat import ChatRequest
 
 client = get_openai_client()
 
 def generate_response(request : ChatRequest):
-    response = client.responses.create(
+    stream = client.responses.create(
         model = "gpt-5.4-nano",
-        input=request.question
+        input=request.question,
+        stream=True
     )
-    response_request = ChatResponse(
-        response = response.output_text,
-    )
-    return response_request
+
+    for event in stream:
+        if event.type == "response.output_text.delta":
+            yield event.delta
 
